@@ -3,7 +3,7 @@ import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { Layout } from "./components/Layout.tsx";
-import { ChartPie, Receipt, UtensilsCrossed } from "lucide-react";
+import { ChartPie, UtensilsCrossed } from "lucide-react";
 import { Toaster } from "sonner";
 import { Spinner } from "./components/ui/misc.tsx";
 import { I18nProvider, useT } from "./lib/i18n.tsx";
@@ -12,6 +12,8 @@ import { applyAccent, applyTheme } from "./lib/theme.ts";
 import { LoginPage, SignupPage } from "./pages/AuthPages.tsx";
 import { ComingSoon } from "./pages/ComingSoon.tsx";
 import { ListPage } from "./pages/list/ListPage.tsx";
+import { ReceiptDetailPage } from "./pages/receipts/ReceiptDetailPage.tsx";
+import { ReceiptsPage } from "./pages/receipts/ReceiptsPage.tsx";
 import { AccountSettings } from "./pages/settings/AccountSettings.tsx";
 import { CategoriesSettings, StoresSettings } from "./pages/settings/CatalogSettings.tsx";
 import { HouseholdSettings } from "./pages/settings/HouseholdSettings.tsx";
@@ -30,7 +32,8 @@ function AuthedRoutes() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<ListPage />} />
-        <Route path="tickets" element={<ComingSoon icon={Receipt} title={t("nav.receipts")} />} />
+        <Route path="tickets" element={<ReceiptsPage />} />
+        <Route path="tickets/:id" element={<ReceiptDetailPage />} />
         <Route path="repas" element={<ComingSoon icon={UtensilsCrossed} title={t("nav.meals")} />} />
         <Route path="bilan" element={<ComingSoon icon={ChartPie} title={t("nav.stats")} />} />
         <Route path="reglages">

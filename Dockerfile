@@ -16,7 +16,8 @@ RUN DATABASE_URL=postgresql://build:build@localhost:5432/build npm run build \
 
 # ── Image finale ──
 FROM node:22-alpine AS runtime
-RUN apk add --no-cache openssl tini
+# tesseract (+ données françaises) : OCR des photos de tickets ; poppler : conversion des PDF scannés en images
+RUN apk add --no-cache openssl tini tesseract-ocr tesseract-ocr-data-fra poppler-utils
 ENV NODE_ENV=production \
     PORT=3000 \
     DATA_DIR=/app/data

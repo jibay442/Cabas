@@ -76,17 +76,19 @@ Droits : **P** = parent, **M** = membre adulte, **E** = profil enfant, **Pub** =
 ## Tickets de caisse
 | Méthode | Route | Droits | Rôle |
 |---|---|---|---|
-| POST | `/api/webhooks/receipt` | Tok | Import n8n (JSON ou multipart). `Authorization: Bearer <token>` : le token du foyer, ou `WEBHOOK_TOKEN` global combiné avec `householdToken`. Rate-limit, idempotent. Réponse : `{ receiptId, duplicate, linesRecognized, unrecognized[] }` |
-| POST | `/api/receipts/upload` | P M | Upload d'une photo ou d'un PDF (multipart, taille limitée), même pipeline |
+| POST | `/api/webhooks/receipt` | Tok | Import n8n (JSON ou multipart). `Authorization: Bearer <token>` : le token du foyer, ou `WEBHOOK_TOKEN` global combiné avec `householdToken`. Champs : `store`, `date`, `total` (€), `fileBase64` / fichier, `rawText` (texte ou HTML du mail), `lines[]` (`label`, `qty`, `unitPrice`, `total`, `ean`). Rate-limit, idempotent. Réponse : `{ receiptId, duplicate, status, linesRecognized, unrecognized[] }` |
+| POST | `/api/receipts/upload` | P M | Photo ou PDF envoyé depuis l'app (multipart, `MAX_UPLOAD_MB`), même pipeline |
 | POST | `/api/receipts` | P M | Saisie manuelle (magasin, date, total, lignes facultatives) |
-| GET | `/api/receipts?from=&to=&storeId=&memberId=&categoryId=&status=` | P M | Historique |
-| GET | `/api/receipts/:id` | P M | Ticket et ses lignes |
+| GET | `/api/receipts?status=` | P M | Historique (`TO_REVIEW`, `VALIDATED`, `FAILED`) |
+| GET | `/api/receipts/:id` | P M | Ticket, lignes, texte lu, parseur utilisé |
 | GET | `/api/receipts/:id/file` | P M | Fichier d'origine |
 | PATCH | `/api/receipts/:id` | P M | Magasin, date, total, liste comparée |
-| PUT | `/api/receipts/:id/lines` | P M | Corriger toutes les lignes (libellé, qté, prix, produit associé) |
-| POST | `/api/receipts/:id/reparse` | P M | Relancer le parseur (ex. après un changement d'enseigne) |
-| POST | `/api/receipts/:id/validate` | P M | Valide le ticket : mémorise les alias, met à jour les derniers prix et le catalogue |
-| DELETE | `/api/receipts/:id` | P | |
+| PUT | `/api/receipts/:id/lines` | P M | Corriger les lignes (libellé, qté, prix, produit associé, rayon) ; lignes absentes supprimées |
+| POST | `/api/receipts/:id/reparse` | P M | Relancer le parseur sur le texte lu |
+| POST | `/api/receipts/:id/validate` | P M | Valide : crée les produits manquants, mémorise les libellés (alias), met à jour les derniers prix |
+| DELETE | `/api/receipts/:id` | P M | Supprime le ticket et son fichier |
+
+Pipeline : lignes fournies > texte du PDF > OCR Tesseract (photo, PDF scanné) > parseur de l'enseigne (`src/receipts/parsers/`), parseur générique sinon. Rapprochement des lignes avec les produits : alias mémorisé (enseigne puis global) > code-barres > nom identique.
 
 ## Comparaison liste ↔ ticket
 | Méthode | Route | Droits | Rôle |

@@ -94,3 +94,9 @@ export function lineTotalCents(item: { quantity: number; unit: string; estUnitPr
   if (item.estUnitPriceCents == null) return 0;
   return priceIsForWholeLine(item.unit) ? item.estUnitPriceCents : Math.round(item.quantity * item.estUnitPriceCents);
 }
+
+/** « LAIT DEMI ECR UHT 1L » → « Lait demi ecr uht 1L » : point de départ pour nommer un nouveau produit */
+export function productNameFromLabel(label: string): string {
+  const lower = label.toLowerCase().replace(/\s+/g, " ").trim();
+  return lower.charAt(0).toUpperCase() + lower.slice(1).replace(/(\d)(l|cl|ml|g|kg)\b/g, (_m, d: string, u: string) => `${d}${u === "l" ? "L" : u}`);
+}

@@ -1,6 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Chain } from "../../shared/defaults.ts";
-import type { AppConfig, CategoryDto, ListDetailDto, ListSummaryDto, MeDto, MemberDto, ProductDto, StoreDto } from "../../shared/types.ts";
+import type {
+  AppConfig,
+  CategoryDto,
+  ListDetailDto,
+  ListSummaryDto,
+  MeDto,
+  MemberDto,
+  ProductDto,
+  ReceiptDetailDto,
+  ReceiptStatus,
+  ReceiptSummaryDto,
+  StoreDto,
+} from "../../shared/types.ts";
 import { api, ApiError } from "./api.ts";
 
 export const useConfig = () => useQuery({ queryKey: ["config"], queryFn: () => api.get<AppConfig>("/config"), staleTime: Infinity });
@@ -50,3 +62,9 @@ export const useProductSuggest = (q: string) =>
     staleTime: 10_000,
     placeholderData: (previous) => previous,
   });
+
+export const useReceipts = (status?: ReceiptStatus) =>
+  useQuery({ queryKey: ["receipts", status ?? "all"], queryFn: () => api.get<ReceiptSummaryDto[]>(`/receipts${status ? `?status=${status}` : ""}`) });
+
+export const useReceipt = (id: string | undefined) =>
+  useQuery({ queryKey: ["receipt", id], queryFn: () => api.get<ReceiptDetailDto>(`/receipts/${id}`), enabled: !!id });

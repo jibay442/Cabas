@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import cookie from "@fastify/cookie";
+import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyError } from "fastify";
@@ -16,7 +17,9 @@ import householdRoutes from "./routes/household.ts";
 import listRoutes from "./routes/lists.ts";
 import memberRoutes from "./routes/members.ts";
 import productRoutes from "./routes/products.ts";
+import receiptRoutes from "./routes/receipts.ts";
 import systemRoutes, { manifest } from "./routes/system.ts";
+import webhookRoutes from "./routes/webhooks.ts";
 
 /** Dossier du front compilé : dist/web (à côté de dist/server) */
 const WEB_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../web");
@@ -36,6 +39,7 @@ export async function buildApp() {
 
   await app.register(cookie);
   await app.register(rateLimit, { global: false });
+  await app.register(multipart, { limits: { fileSize: env.MAX_UPLOAD_MB * 1024 * 1024, files: 2, fields: 20, fieldSize: 1024 * 1024 }, throwFileSizeLimit: true });
   registerAuth(app);
 
   // Protection CSRF en complément des cookies SameSite=Strict : une requête qui modifie
@@ -85,6 +89,8 @@ export async function buildApp() {
       await api.register(productRoutes);
       await api.register(listRoutes);
       await api.register(eventRoutes);
+      await api.register(receiptRoutes);
+      await api.register(webhookRoutes);
     },
     { prefix: "/api" },
   );

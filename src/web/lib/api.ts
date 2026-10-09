@@ -46,8 +46,26 @@ export function parseMoney(input: string): number | null {
   return Number.isFinite(value) && value >= 0 ? Math.round(value * 100) : null;
 }
 
+/** Comme parseMoney, mais accepte un montant négatif (remise) : « -0,50 » → -50 */
+export function parseSignedMoney(input: string): number | null {
+  const negative = input.trim().startsWith("-");
+  const cents = parseMoney(input.replace("-", ""));
+  return cents === null ? null : negative ? -cents : cents;
+}
+
 /** 105 → « 1,05 » (pour pré-remplir un champ) */
 export const centsToInput = (cents: number | null | undefined) => (cents == null ? "" : (cents / 100).toFixed(2).replace(".", ","));
 
 /** Message lisible d'une erreur d'API */
 export const errorMessage = (e: unknown, fallback: string) => (e instanceof ApiError ? e.message : fallback);
+
+/** Envoi d'un fichier (multipart) */
+export async function upload<T>(url: string, file: File, fields: Record<string, string> = {}): Promise<T> {
+  const form = new FormData();
+  for (const [key, value] of Object.entries(fields)) form.append(key, value);
+  form.append("file", file);
+  const res = await fetch(`/api${url}`, { method: "POST", body: form, credentials: "same-origin" });
+  const data = (await res.json().catch(() => null)) as (T & Partial<ApiErrorBody>) | null;
+  if (!res.ok) throw new ApiError(res.status, data?.error?.code ?? "error", data?.error?.message ?? res.statusText);
+  return data as T;
+}

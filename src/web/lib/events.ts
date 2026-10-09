@@ -14,6 +14,10 @@ export function useHouseholdEvents() {
       const event = JSON.parse(message.data as string) as HouseholdEvent;
       if (event.topic === "list" && event.id) void queryClient.invalidateQueries({ queryKey: ["list", event.id] });
       if (event.topic === "lists") void queryClient.invalidateQueries({ queryKey: ["lists"] });
+      if (event.topic === "receipts") {
+        void queryClient.invalidateQueries({ queryKey: ["receipts"] });
+        if (event.id) void queryClient.invalidateQueries({ queryKey: ["receipt", event.id] });
+      }
       if (event.topic === "products") {
         void queryClient.invalidateQueries({ queryKey: ["products"] });
         void queryClient.invalidateQueries({ queryKey: ["list"] });

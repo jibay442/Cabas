@@ -135,8 +135,53 @@ export interface ListDetailDto extends ListSummaryDto {
 
 /** Évènement temps réel diffusé aux membres du foyer (SSE /api/events) */
 export interface HouseholdEvent {
-  topic: "list" | "lists" | "products";
+  topic: "list" | "lists" | "products" | "receipts";
   id?: string;
   /** Membre à l'origine du changement */
   by: string;
+}
+
+export type ReceiptStatus = "TO_REVIEW" | "VALIDATED" | "FAILED";
+export type ReceiptSource = "WEBHOOK" | "UPLOAD" | "MANUAL";
+
+export interface ReceiptSummaryDto {
+  id: string;
+  storeId: string | null;
+  storeName: string | null;
+  chain: string;
+  purchasedAt: string;
+  totalCents: number;
+  status: ReceiptStatus;
+  source: ReceiptSource;
+  lineCount: number;
+  /** Lignes non rattachées à un produit du foyer */
+  unmatchedCount: number;
+  /** Somme des lignes, pour signaler un écart avec le total */
+  linesTotalCents: number;
+  hasFile: boolean;
+  listId: string | null;
+  createdAt: string;
+}
+
+export interface ReceiptLineDto {
+  id: string;
+  position: number;
+  rawLabel: string;
+  label: string;
+  quantity: number;
+  unitPriceCents: number | null;
+  totalCents: number;
+  ean: string | null;
+  isDiscount: boolean;
+  productId: string | null;
+  productName: string | null;
+  categoryId: string | null;
+}
+
+export interface ReceiptDetailDto extends ReceiptSummaryDto {
+  /** Parseur utilisé : leclerc, auchan…, other (générique), lines (fournies par n8n), manual, none */
+  parser: string | null;
+  fileMime: string | null;
+  rawText: string | null;
+  lines: ReceiptLineDto[];
 }

@@ -1,0 +1,21 @@
+E.LECLERC
+SAS EXEMPLE DISTRIBUTION
+1 RUE DU COMMERCE
+35000 RENNES
+TEL : 02 00 00 00 00
+09/10/2026 18:32  CAISSE 012  TICKET 4521
+LAIT DEMI ECR UHT 1L                2,10 1
+   2 x 1,05 €
+BAGUETTE TRADITION                  1,10 1
+POMMES GOLDEN                       2,26 1
+   0,756 kg x 2,99 €/kg
+YAOURT NATURE X8                    2,35 1
+REMISE IMMEDIATE                   -0,50 1
+LESSIVE LIQUIDE 2L                  8,99 2
+NB ARTICLES : 7
+TOTAL A PAYER                      16,30 €
+CB                                 16,30
+TICKET E.LECLERC                    0,45
+TVA 1  5,50%   HT 7,11   TVA 0,39
+TVA 2 20,00%   HT 7,49   TVA 1,50
+MERCI DE VOTRE VISITE
