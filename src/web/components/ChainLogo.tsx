@@ -1,8 +1,9 @@
 import { svg as auchan } from "@thesvg/icons/auchan";
 import { svg as leclerc } from "@thesvg/icons/edotleclerc";
 import { svg as intermarche } from "@thesvg/icons/intermarche";
+import { Store } from "lucide-react";
 import { CHAINS } from "../../shared/defaults.ts";
-import { cx } from "./ui.tsx";
+import { cn } from "../lib/utils.ts";
 
 // Logos issus de thesvg.org (paquet @thesvg/icons, MIT) — les marques restent la propriété de leurs titulaires.
 // Super U n'y figure pas : pastille « U » à la place.
@@ -17,16 +18,16 @@ export function ChainLogo({ chain, size = "md" }: { chain: string; size?: "sm" |
       role="img"
       aria-label={name}
       title={name}
-      className={cx(
-        "inline-flex shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-stone-200 dark:ring-stone-700 [&>svg]:size-full",
-        size === "sm" ? "size-6 p-0.5" : "size-10 p-1.5",
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-md border bg-white [&>svg]:size-full",
+        size === "sm" ? "size-5 p-0.5" : "size-8 p-1",
       )}
       dangerouslySetInnerHTML={logo ? { __html: logo } : undefined}
     >
       {logo ? undefined : chain === "superu" ? (
-        <span className={cx("font-black leading-none text-[#e2001a]", size === "sm" ? "text-sm" : "text-xl")}>U</span>
+        <span className={cn("font-black leading-none text-[#e2001a]", size === "sm" ? "text-[11px]" : "text-base")}>U</span>
       ) : (
-        <span className={size === "sm" ? "text-sm" : "text-xl"}>🏪</span>
+        <Store className="size-3/4 text-slate-500" />
       )}
     </span>
   );

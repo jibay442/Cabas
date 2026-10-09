@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Monitor, Moon, Sun } from "lucide-react";
 import type { Theme } from "../../shared/types.ts";
 import { api } from "../lib/api.ts";
 import { useT } from "../lib/i18n.tsx";
 import { useMe } from "../lib/queries.ts";
 import { applyTheme, storedTheme } from "../lib/theme.ts";
+import { Button } from "./ui/button.tsx";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "./ui/dropdown-menu.tsx";
 
-const NEXT: Record<Theme, Theme> = { SYSTEM: "LIGHT", LIGHT: "DARK", DARK: "SYSTEM" };
-const ICON: Record<Theme, string> = { SYSTEM: "🌗", LIGHT: "☀️", DARK: "🌙" };
-
-/** Bascule système → clair → sombre ; le choix est mémorisé sur le compte. */
+/** Thème clair / sombre / système ; le choix est mémorisé sur le compte. */
 export function ThemeToggle() {
   const t = useT();
   const queryClient = useQueryClient();
@@ -19,19 +19,32 @@ export function ThemeToggle() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["me"] }),
   });
 
-  const next = NEXT[theme];
+  const choose = (next: Theme) => {
+    applyTheme(next);
+    if (me) save.mutate(next);
+  };
+
   return (
-    <button
-      type="button"
-      onClick={() => {
-        applyTheme(next);
-        if (me) save.mutate(next);
-      }}
-      className="rounded-full p-2 text-xl hover:bg-stone-200 focus-visible:outline-2 focus-visible:outline-accent dark:hover:bg-stone-800"
-      aria-label={t("theme.toggle", { current: t(`theme.${theme}`), next: t(`theme.${next}`) })}
-      title={t(`theme.${theme}`)}
-    >
-      <span aria-hidden>{ICON[theme]}</span>
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={t("theme.label")}>
+          <Sun className="dark:hidden" />
+          <Moon className="hidden dark:block" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuRadioGroup value={theme} onValueChange={(v) => choose(v as Theme)}>
+          <DropdownMenuRadioItem value="LIGHT">
+            <Sun /> {t("theme.LIGHT")}
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="DARK">
+            <Moon /> {t("theme.DARK")}
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="SYSTEM">
+            <Monitor /> {t("theme.SYSTEM")}
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

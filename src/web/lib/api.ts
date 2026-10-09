@@ -48,3 +48,6 @@ export function parseMoney(input: string): number | null {
 
 /** 105 → « 1,05 » (pour pré-remplir un champ) */
 export const centsToInput = (cents: number | null | undefined) => (cents == null ? "" : (cents / 100).toFixed(2).replace(".", ","));
+
+/** Message lisible d'une erreur d'API */
+export const errorMessage = (e: unknown, fallback: string) => (e instanceof ApiError ? e.message : fallback);

@@ -1,9 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { defaultListTitle } from "../../shared/listTitle.ts";
 import { lineTotalCents, UNITS } from "../../shared/text.ts";
 import type { ListDetailDto, ListItemDto, ListSummaryDto } from "../../shared/types.ts";
 import { prisma, type Tx } from "../db.ts";
 import type { ListItem, Member, Product, ShoppingList } from "../generated/prisma/client.ts";
+import { env } from "../env.ts";
 import { badRequest, forbidden, notFound } from "../lib/errors.ts";
 import { ADULTS, auth, type Auth } from "../plugins/auth.ts";
 import { publish } from "../services/events.ts";
@@ -44,6 +46,7 @@ function summaryDto(list: ShoppingList, items: Pick<ListItem, "quantity" | "unit
     name: list.name,
     status: list.status,
     storeId: list.storeId,
+    createdById: list.createdById,
     createdAt: list.createdAt.toISOString(),
     archivedAt: list.archivedAt?.toISOString() ?? null,
     itemCount: items.length,
@@ -73,6 +76,18 @@ const addItemSchema = z
     ...z.object(itemFields).partial().shape,
   })
   .refine((b) => b.name || b.productId, { message: "Nom ou produit requis" });
+
+/** « Courses du jeudi 9 octobre », suffixé « (2) », « (3) »… si ce titre existe déjà */
+async function newListTitle(tx: Tx, householdId: string, locale: string): Promise<string> {
+  const base = defaultListTitle(new Date(), locale === "en" ? "en" : "fr", env.TZ);
+  const taken = new Set(
+    (await tx.shoppingList.findMany({ where: { householdId, name: { startsWith: base } }, select: { name: true } })).map((l) => l.name),
+  );
+  if (!taken.has(base)) return base;
+  let n = 2;
+  while (taken.has(`${base} (${n})`)) n++;
+  return `${base} (${n})`;
+}
 
 async function findList(householdId: string, id: string) {
   const list = await prisma.shoppingList.findFirst({ where: { id, householdId } });
@@ -154,9 +169,10 @@ export default async function listRoutes(app: FastifyInstance) {
 
   app.post("/lists", async (request) => {
     const a = auth(request, ...ADULTS);
-    const body = z.object({ name: z.string().trim().min(1).max(60), storeId: z.string().nullable().optional() }).parse(request.body);
+    const body = z.object({ name: z.string().trim().min(1).max(60).optional(), storeId: z.string().nullable().optional() }).parse(request.body ?? {});
     await checkRefs(prisma, a.household.id, body);
-    const list = await prisma.shoppingList.create({ data: { ...body, householdId: a.household.id, createdById: a.member.id } });
+    const name = body.name ?? (await newListTitle(prisma, a.household.id, a.user.locale));
+    const list = await prisma.shoppingList.create({ data: { ...body, name, householdId: a.household.id, createdById: a.member.id } });
     publish(a.household.id, { topic: "lists", by: a.member.id });
     return summaryDto(list, []);
   });
@@ -208,7 +224,7 @@ export default async function listRoutes(app: FastifyInstance) {
       const remaining = await tx.listItem.findMany({ where: { listId: id, checked: false }, select: { id: true } });
       if (!carryOver || !remaining.length) return null;
       const next = await tx.shoppingList.create({
-        data: { householdId: a.household.id, name: list.name, storeId: list.storeId, createdById: a.member.id },
+        data: { householdId: a.household.id, name: await newListTitle(tx, a.household.id, a.user.locale), storeId: list.storeId, createdById: a.member.id },
       });
       await tx.listItem.updateMany({ where: { id: { in: remaining.map((i) => i.id) } }, data: { listId: next.id } });
       return next.id;
@@ -231,14 +247,39 @@ export default async function listRoutes(app: FastifyInstance) {
     return itemDto(await prisma.listItem.findUniqueOrThrow({ where: { id: item.id }, include: itemInclude }));
   });
 
-  /** Ajout groupé de produits connus (favoris, récurrents, reports) */
+  /**
+   * Ajout groupé : articles issus d'une note (tous les membres),
+   * ou produits connus — favoris, récurrents, reports (adultes).
+   */
   app.post("/lists/:id/items/bulk", async (request) => {
-    const a = auth(request, ...ADULTS);
+    const a = auth(request);
     const { id } = idParams.parse(request.params);
-    const { productIds } = z.object({ productIds: z.array(z.string()).min(1).max(200) }).parse(request.body);
+    const body = z
+      .union([
+        z.object({ productIds: z.array(z.string()).min(1).max(200) }),
+        z.object({
+          items: z
+            .array(
+              z.object({
+                name: z.string().trim().min(1).max(80),
+                quantity: itemFields.quantity.optional(),
+                unit: itemFields.unit.nullable().optional(),
+                note: itemFields.note.optional(),
+              }),
+            )
+            .min(1)
+            .max(100),
+        }),
+      ])
+      .parse(request.body);
+    if ("productIds" in body && a.member.role === "CHILD") throw forbidden();
     await findList(a.household.id, id);
     await prisma.$transaction(async (tx) => {
-      for (const productId of new Set(productIds)) await addItem(tx, a, id, { productId });
+      if ("productIds" in body) {
+        for (const productId of new Set(body.productIds)) await addItem(tx, a, id, { productId });
+      } else {
+        for (const item of body.items) await addItem(tx, a, id, { ...item, unit: item.unit ?? undefined });
+      }
     });
     changed(a, id);
     return { ok: true };

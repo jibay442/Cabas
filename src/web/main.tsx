@@ -3,7 +3,9 @@ import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { Layout } from "./components/Layout.tsx";
-import { Spinner, ToastProvider } from "./components/ui.tsx";
+import { ChartPie, Receipt, UtensilsCrossed } from "lucide-react";
+import { Toaster } from "sonner";
+import { Spinner } from "./components/ui/misc.tsx";
 import { I18nProvider, useT } from "./lib/i18n.tsx";
 import { useConfig, useMe } from "./lib/queries.ts";
 import { applyAccent, applyTheme } from "./lib/theme.ts";
@@ -28,9 +30,9 @@ function AuthedRoutes() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<ListPage />} />
-        <Route path="tickets" element={<ComingSoon emoji="🧾" title={t("nav.receipts")} />} />
-        <Route path="repas" element={<ComingSoon emoji="🍽️" title={t("nav.meals")} />} />
-        <Route path="bilan" element={<ComingSoon emoji="📊" title={t("nav.stats")} />} />
+        <Route path="tickets" element={<ComingSoon icon={Receipt} title={t("nav.receipts")} />} />
+        <Route path="repas" element={<ComingSoon icon={UtensilsCrossed} title={t("nav.meals")} />} />
+        <Route path="bilan" element={<ComingSoon icon={ChartPie} title={t("nav.stats")} />} />
         <Route path="reglages">
           <Route index element={<SettingsPage />} />
           <Route path="compte" element={<AccountSettings />} />
@@ -64,7 +66,7 @@ function App() {
 
   if (isPending) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-accent-ink">
+      <div className="flex min-h-dvh items-center justify-center">
         <Spinner />
       </div>
     );
@@ -72,8 +74,7 @@ function App() {
 
   return (
     <I18nProvider locale={locale}>
-      <ToastProvider>
-        {me ? (
+      {me ? (
           <AuthedRoutes />
         ) : (
           <Routes>
@@ -82,8 +83,8 @@ function App() {
             <Route path="/invite/:token" element={<SignupPage />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
-        )}
-      </ToastProvider>
+      )}
+      <Toaster position="top-center" richColors closeButton theme={me?.user.theme === "DARK" ? "dark" : me?.user.theme === "LIGHT" ? "light" : "system"} />
     </I18nProvider>
   );
 }

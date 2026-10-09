@@ -5,17 +5,19 @@
     "error": "Something went wrong",
     "ok": "OK",
     "save": "Save",
-    "saved": "Saved ✓",
+    "saved": "Saved",
     "add": "Add",
     "copy": "Copy",
-    "copied": "Copied to clipboard ✓",
+    "copied": "Copied to clipboard",
     "share": "Share",
     "revoke": "Revoke",
     "delete": "Delete",
     "moveUp": "Move up",
     "moveDown": "Move down",
     "notFound": "Not found",
-    "comingSoon": "This section is coming soon 🚧"
+    "comingSoon": "This section arrives in a later step.",
+    "cancel": "Cancel",
+    "comingSoonTitle": "Coming soon"
   },
   "nav": {
     "list": "List",
@@ -36,11 +38,13 @@
   "profile": {
     "switchTitle": "Switch profile",
     "noChildren": "Add child profiles in Settings › Members to use them on this device.",
-    "pin": "PIN code"
+    "pin": "PIN code",
+    "switchHint": "Switch to a child profile on this device, or back to yours.",
+    "current": "current"
   },
   "auth": {
     "login": "Sign in",
-    "loginTitle": "Welcome back 👋",
+    "loginTitle": "Sign in",
     "logout": "Sign out",
     "email": "Email",
     "password": "Password",
@@ -55,7 +59,9 @@
     "join": "Join",
     "joinTitle": "Join “{name}”",
     "joinHint": "Create your account to shop together.",
-    "inviteInvalid": "Invalid or expired invitation 😕"
+    "inviteInvalid": "Invalid or expired invitation",
+    "loginHint": "Sign in to see your household's shopping.",
+    "inviteInvalidHint": "Ask a parent of the household for a new link."
   },
   "role": {
     "PARENT": "Parent",
@@ -100,7 +106,9 @@
     "allergens": "Allergies & intolerances",
     "allergensHint": "An alert is shown when a product on the list contains one.",
     "remove": "Remove from household",
-    "removeConfirm": "Remove {name} from the household? Their account and journal will be deleted."
+    "removeConfirm": "Remove {name} from the household? Their account and journal will be deleted.",
+    "identity": "Identity",
+    "added": "{name} was added to the household"
   },
   "household": {
     "name": "Household name",
@@ -130,27 +138,29 @@
     "categoriesDesc": "Categories and emojis",
     "stores": "Stores",
     "storesDesc": "Chains and usual stores",
-    "childHint": "🧒 You are on a child profile. Tap your avatar at the top to switch profile.",
+    "childHint": "Child profile: use the menu at the top right to switch profile.",
     "openSource": "open source (MIT)",
     "language": "Language",
     "changePassword": "Change password",
     "currentPassword": "Current password",
     "newPassword": "New password",
-    "passwordChanged": "Password changed ✓ Other devices have been signed out."
+    "passwordChanged": "Password changed. Other devices have been signed out.",
+    "preferences": "Preferences"
   },
   "activity": {
-    "sedentary": "🪑 Sedentary",
-    "light": "🚶 Light (1–3 sessions/week)",
-    "moderate": "🚴 Moderate (3–5 sessions/week)",
-    "active": "🏃 Active (6–7 sessions/week)",
-    "veryActive": "🏋️ Very active (physical job)"
+    "sedentary": "Sedentary",
+    "light": "Light (1–3 sessions/week)",
+    "moderate": "Moderate (3–5 sessions/week)",
+    "active": "Active (6–7 sessions/week)",
+    "veryActive": "Very active (physical job)"
   },
   "categories": {
     "hint": "The shopping list is sorted in this order: arrange aisles like in your store.",
     "emoji": "Emoji",
     "name": "Aisle name",
     "newPlaceholder": "New aisle",
-    "deleteConfirm": "Delete aisle “{name}”? Its items will have no aisle."
+    "deleteConfirm": "Delete aisle “{name}”? Its items will have no aisle.",
+    "new": "New aisle"
   },
   "stores": {
     "add": "Add a store",
@@ -168,8 +178,8 @@
     "listName": "List name",
     "listNamePlaceholder": "Lea's birthday",
     "empty": "The list is empty",
-    "emptyHint": "Add an item with the field above: everyone can add to the list, it updates live on every phone.",
-    "allDone": "Everything is in the cart!",
+    "emptyHint": "Type or dictate your shopping in the note: one line or comma per item.",
+    "allDone": "Everything is in the cart.",
     "inCart": "In the cart",
     "estimated": "Estimated total",
     "check": "Mark “{name}” as picked up",
@@ -192,7 +202,7 @@
     "notePlaceholder": "Brand, size, gluten-free…",
     "favorite": "Favourite",
     "recurring": "Recurring product",
-    "recurringHint": "Suggested for every new list under ⭐",
+    "recurringHint": "Suggested in “Favourites & recurring”",
     "quickPicks": "Favourites & recurring",
     "recurringTab": "Recurring",
     "favoritesTab": "Favourites",
@@ -206,9 +216,18 @@
     "finishHint": "The list moves to history; it will be compared with the receipt.",
     "carryOver": "Move the {count} item(s) not picked up to a new list",
     "finish": "Finish shopping",
-    "finished": "Shopping done 🎉",
+    "finished": "Shopping finished",
     "delete": "Delete list",
-    "deleteConfirm": "Delete list “{name}” and all its items?"
+    "deleteConfirm": "Delete list “{name}” and all its items?",
+    "lists": "Lists",
+    "inProgress": "In progress",
+    "history": "History",
+    "created": "List created: {name}",
+    "createdOn": "created {date}",
+    "archivedOn": "Shopping finished on {date}",
+    "progress": "Shopping progress",
+    "edit": "Edit list",
+    "reopen": "Reopen list"
   },
   "units": {
     "pcs": "piece(s)",
@@ -221,5 +240,21 @@
     "boîte": "can(s)/box(es)",
     "bouteille": "bottle(s)",
     "lot": "bundle(s)"
+  },
+  "note": {
+    "label": "Shopping note",
+    "placeholder": "Milk, 2 baguettes, 1 kg apples, bread (wholemeal)…",
+    "hint": "One line or comma per item · (in brackets) = note · Enter to add",
+    "preview": "Detected items",
+    "dictate": "Dictate",
+    "stopDictation": "Stop dictation",
+    "listening": "Listening…",
+    "micDenied": "Microphone blocked: allow it in your browser settings.",
+    "micError": "Dictation failed, please try again.",
+    "add": "Add {count} item(s)",
+    "addOne": "Add",
+    "addMany": "Add {count} items",
+    "added": "{count} items added",
+    "addedOne": "{name} added"
   }
 }

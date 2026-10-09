@@ -1,11 +1,18 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { priceIsForWholeLine, UNITS } from "../../../shared/text.ts";
 import type { ListItemDto } from "../../../shared/types.ts";
-import { Avatar, Button, cx, Input, Select, Sheet, Toggle } from "../../components/ui.tsx";
+import { Avatar } from "../../components/ui/avatar.tsx";
+import { Button } from "../../components/ui/button.tsx";
+import { Sheet } from "../../components/ui/dialog.tsx";
+import { Input, NativeSelect } from "../../components/ui/input.tsx";
+import { Field, Label } from "../../components/ui/label.tsx";
+import { SwitchRow } from "../../components/ui/switch.tsx";
 import { api, centsToInput, parseMoney } from "../../lib/api.ts";
-import { useT } from "../../lib/i18n.tsx";
+import { useI18n } from "../../lib/i18n.tsx";
 import { useCategories, useMembers, useSession, useStores } from "../../lib/queries.ts";
+import { cn } from "../../lib/utils.ts";
 import type { ItemPatch } from "./useListActions.ts";
 
 /** Fiche d'un article : quantité, prix, rayon, pour qui, magasin, note, favori / récurrent */
@@ -20,16 +27,16 @@ export function ItemSheet({
   onSave: (patch: ItemPatch) => void;
   onDelete: () => void;
 }) {
-  const t = useT();
+  const { t } = useI18n();
   return (
-    <Sheet open={!!item} onClose={onClose} title={item?.name ?? t("list.item")}>
+    <Sheet open={!!item} onOpenChange={(open) => !open && onClose()} title={item?.name ?? t("list.item")}>
       {item && <ItemForm key={item.id} item={item} onSave={onSave} onDelete={onDelete} />}
     </Sheet>
   );
 }
 
 function ItemForm({ item, onSave, onDelete }: { item: ListItemDto; onSave: (patch: ItemPatch) => void; onDelete: () => void }) {
-  const t = useT();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { isAdult } = useSession();
   const { data: categories = [] } = useCategories();
@@ -70,98 +77,96 @@ function ItemForm({ item, onSave, onDelete }: { item: ListItemDto; onSave: (patc
     });
   }
 
+  const chip = (selected: boolean) =>
+    cn("flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition-colors", selected ? "border-primary bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-accent");
+
   return (
     <form
-      className="space-y-4"
+      className="grid gap-4"
       onSubmit={(e) => {
         e.preventDefault();
         save();
       }}
     >
-      <Input label={t("list.name")} required maxLength={80} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+      <Field label={t("list.name")}>{(id) => <Input id={id} required maxLength={80} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />}</Field>
       <div className="grid grid-cols-3 gap-3">
-        <Input label={t("list.quantity")} inputMode="decimal" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
-        <Select label={t("list.unit")} value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}>
-          {UNITS.map((u) => (
-            <option key={u} value={u}>
-              {t(`units.${u}`)}
-            </option>
-          ))}
-        </Select>
-        <Input
-          label={priceIsForWholeLine(form.unit) ? t("list.priceTotal") : t("list.priceUnit")}
-          inputMode="decimal"
-          placeholder="0,00"
-          value={form.price}
-          onChange={(e) => setForm({ ...form, price: e.target.value })}
-        />
+        <Field label={t("list.quantity")}>
+          {(id) => <Input id={id} inputMode="decimal" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />}
+        </Field>
+        <Field label={t("list.unit")}>
+          {(id) => (
+            <NativeSelect id={id} value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}>
+              {UNITS.map((u) => (
+                <option key={u} value={u}>
+                  {t(`units.${u}`)}
+                </option>
+              ))}
+            </NativeSelect>
+          )}
+        </Field>
+        <Field label={priceIsForWholeLine(form.unit) ? t("list.priceTotal") : t("list.priceUnit")}>
+          {(id) => <Input id={id} inputMode="decimal" placeholder="0,00" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />}
+        </Field>
       </div>
-      <Select label={t("list.category")} value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
-        <option value="">📦 {t("list.noCategory")}</option>
-        {categories.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.emoji} {c.name}
-          </option>
-        ))}
-      </Select>
+      <Field label={t("list.category")}>
+        {(id) => (
+          <NativeSelect id={id} value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
+            <option value="">{t("list.noCategory")}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.emoji} {c.name}
+              </option>
+            ))}
+          </NativeSelect>
+        )}
+      </Field>
 
-      <fieldset>
-        <legend className="mb-1.5 text-sm font-medium text-stone-700 dark:text-stone-300">{t("list.forWhom")}</legend>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            aria-pressed={form.forMemberIds.length === 0}
-            onClick={() => setForm({ ...form, forMemberIds: [] })}
-            className={cx("rounded-full px-3 py-1.5 text-sm ring-1", form.forMemberIds.length === 0 ? "bg-accent/15 ring-accent" : "ring-stone-300 dark:ring-stone-700")}
-          >
-            🏠 {t("list.everyone")}
+      <fieldset className="grid gap-2">
+        <Label asChild>
+          <legend>{t("list.forWhom")}</legend>
+        </Label>
+        <div className="flex flex-wrap gap-1.5">
+          <button type="button" aria-pressed={form.forMemberIds.length === 0} onClick={() => setForm({ ...form, forMemberIds: [] })} className={chip(form.forMemberIds.length === 0)}>
+            {t("list.everyone")}
           </button>
           {members.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              aria-pressed={form.forMemberIds.includes(m.id)}
-              onClick={() => toggleMember(m.id)}
-              className={cx(
-                "flex items-center gap-1.5 rounded-full py-1 pl-1 pr-3 text-sm ring-1",
-                form.forMemberIds.includes(m.id) ? "bg-accent/15 ring-accent" : "ring-stone-300 dark:ring-stone-700",
-              )}
-            >
-              <Avatar size="xs" emoji={m.emoji} color={m.color} />
+            <button key={m.id} type="button" aria-pressed={form.forMemberIds.includes(m.id)} onClick={() => toggleMember(m.id)} className={chip(form.forMemberIds.includes(m.id))}>
+              <Avatar size="xs" name={m.displayName} color={m.color} />
               {m.displayName}
             </button>
           ))}
         </div>
       </fieldset>
 
-      <Select label={t("list.store")} value={form.storeId} onChange={(e) => setForm({ ...form, storeId: e.target.value })}>
-        <option value="">{t("list.anyStore")}</option>
-        {stores
-          .filter((s) => !s.archived || s.id === form.storeId)
-          .map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-              {s.city ? ` · ${s.city}` : ""}
-            </option>
-          ))}
-      </Select>
-      <Input label={t("list.note")} placeholder={t("list.notePlaceholder")} maxLength={200} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+      <Field label={t("list.store")}>
+        {(id) => (
+          <NativeSelect id={id} value={form.storeId} onChange={(e) => setForm({ ...form, storeId: e.target.value })}>
+            <option value="">{t("list.anyStore")}</option>
+            {stores
+              .filter((s) => !s.archived || s.id === form.storeId)
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                  {s.city ? ` · ${s.city}` : ""}
+                </option>
+              ))}
+          </NativeSelect>
+        )}
+      </Field>
+      <Field label={t("list.note")}>
+        {(id) => <Input id={id} placeholder={t("list.notePlaceholder")} maxLength={200} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />}
+      </Field>
 
       {isAdult && (
-        <div className="divide-y divide-stone-200 dark:divide-stone-800">
-          <Toggle label={`⭐ ${t("list.favorite")}`} checked={product.isFavorite} onChange={(v) => toggleProduct.mutate({ isFavorite: v })} />
-          <Toggle
-            label={`🔁 ${t("list.recurring")}`}
-            description={t("list.recurringHint")}
-            checked={product.isRecurring}
-            onChange={(v) => toggleProduct.mutate({ isRecurring: v })}
-          />
+        <div className="divide-y border-y">
+          <SwitchRow label={t("list.favorite")} checked={product.isFavorite} onCheckedChange={(v) => toggleProduct.mutate({ isFavorite: v })} />
+          <SwitchRow label={t("list.recurring")} description={t("list.recurringHint")} checked={product.isRecurring} onCheckedChange={(v) => toggleProduct.mutate({ isRecurring: v })} />
         </div>
       )}
 
-      <div className="flex gap-2 pt-2">
-        <Button variant="secondary" onClick={onDelete} aria-label={t("common.delete")}>
-          🗑️
+      <div className="flex gap-2 pt-1">
+        <Button variant="outline" className="text-destructive" onClick={onDelete}>
+          <Trash2 /> {t("common.delete")}
         </Button>
         <Button type="submit" className="flex-1">
           {t("common.save")}

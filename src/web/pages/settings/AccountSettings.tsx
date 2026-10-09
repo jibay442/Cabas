@@ -1,15 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { LogOut } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import type { Theme } from "../../../shared/types.ts";
-import { Button, Card, cx, Input, PageHeader, Select, useToast } from "../../components/ui.tsx";
-import { api, ApiError } from "../../lib/api.ts";
+import { Button } from "../../components/ui/button.tsx";
+import { Input, NativeSelect } from "../../components/ui/input.tsx";
+import { Field } from "../../components/ui/label.tsx";
+import { PageHeader } from "../../components/ui/misc.tsx";
+import { api, errorMessage } from "../../lib/api.ts";
 import { useT } from "../../lib/i18n.tsx";
 import { useSession } from "../../lib/queries.ts";
 import { applyTheme } from "../../lib/theme.ts";
+import { BackToSettings, SettingsCard } from "./SettingsShared.tsx";
 
 export function AccountSettings() {
   const t = useT();
-  const toast = useToast();
   const queryClient = useQueryClient();
   const { user } = useSession();
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" });
@@ -17,101 +22,101 @@ export function AccountSettings() {
   const update = useMutation({
     mutationFn: (body: object) => api.patch("/auth/me", body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["me"] }),
-    onError: (e) => toast(e instanceof ApiError ? e.message : t("common.error"), "error"),
+    onError: (e) => toast.error(errorMessage(e, t("common.error"))),
   });
   const logout = useMutation({
     mutationFn: () => api.post("/auth/logout"),
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.clear();
       window.location.href = "/login";
     },
   });
 
-  const themes: { value: Theme; emoji: string }[] = [
-    { value: "SYSTEM", emoji: "🌗" },
-    { value: "LIGHT", emoji: "☀️" },
-    { value: "DARK", emoji: "🌙" },
-  ];
-
   return (
-    <>
-      <PageHeader title={t("settings.account")} back="/reglages" />
-      <div className="space-y-4">
-        <Card className="space-y-4">
-          <p className="text-sm text-stone-500 dark:text-stone-400">{user.email}</p>
-          <fieldset>
-            <legend className="mb-1.5 text-sm font-medium text-stone-700 dark:text-stone-300">{t("theme.label")}</legend>
-            <div className="grid grid-cols-3 gap-2">
-              {themes.map((theme) => (
-                <button
-                  key={theme.value}
-                  type="button"
-                  aria-pressed={user.theme === theme.value}
-                  onClick={() => {
-                    applyTheme(theme.value);
-                    update.mutate({ theme: theme.value });
-                  }}
-                  className={cx(
-                    "flex flex-col items-center gap-1 rounded-xl py-3 ring-1 ring-stone-200 dark:ring-stone-700",
-                    user.theme === theme.value && "bg-accent/10 ring-2 ring-accent",
-                  )}
-                >
-                  <span className="text-2xl" aria-hidden>
-                    {theme.emoji}
-                  </span>
-                  <span className="text-sm">{t(`theme.${theme.value}`)}</span>
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <Select label={t("settings.language")} value={user.locale} onChange={(e) => update.mutate({ locale: e.target.value })}>
-            <option value="fr">🇫🇷 Français</option>
-            <option value="en">🇬🇧 English</option>
-          </Select>
-        </Card>
+    <div className="mx-auto grid max-w-2xl gap-4">
+      <PageHeader back={<BackToSettings />} title={t("settings.account")} description={user.email} />
 
-        <Card>
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              update.mutate(passwords, {
-                onSuccess: () => {
-                  setPasswords({ currentPassword: "", newPassword: "" });
-                  toast(t("settings.passwordChanged"));
-                },
-              });
-            }}
-          >
-            <h2 className="font-semibold">{t("settings.changePassword")}</h2>
-            <Input
-              label={t("settings.currentPassword")}
-              type="password"
-              autoComplete="current-password"
-              required
-              value={passwords.currentPassword}
-              onChange={(e) => setPasswords((p) => ({ ...p, currentPassword: e.target.value }))}
-            />
-            <Input
-              label={t("settings.newPassword")}
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              hint={t("auth.passwordHint")}
-              value={passwords.newPassword}
-              onChange={(e) => setPasswords((p) => ({ ...p, newPassword: e.target.value }))}
-            />
+      <SettingsCard title={t("settings.preferences")}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={t("theme.label")}>
+            {(id) => (
+              <NativeSelect
+                id={id}
+                value={user.theme}
+                onChange={(e) => {
+                  const theme = e.target.value as Theme;
+                  applyTheme(theme);
+                  update.mutate({ theme });
+                }}
+              >
+                <option value="SYSTEM">{t("theme.SYSTEM")}</option>
+                <option value="LIGHT">{t("theme.LIGHT")}</option>
+                <option value="DARK">{t("theme.DARK")}</option>
+              </NativeSelect>
+            )}
+          </Field>
+          <Field label={t("settings.language")}>
+            {(id) => (
+              <NativeSelect id={id} value={user.locale} onChange={(e) => update.mutate({ locale: e.target.value })}>
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </NativeSelect>
+            )}
+          </Field>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard title={t("settings.changePassword")}>
+        <form
+          className="grid gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            update.mutate(passwords, {
+              onSuccess: () => {
+                setPasswords({ currentPassword: "", newPassword: "" });
+                toast.success(t("settings.passwordChanged"));
+              },
+            });
+          }}
+        >
+          <Field label={t("settings.currentPassword")}>
+            {(id) => (
+              <Input
+                id={id}
+                type="password"
+                autoComplete="current-password"
+                required
+                value={passwords.currentPassword}
+                onChange={(e) => setPasswords((p) => ({ ...p, currentPassword: e.target.value }))}
+              />
+            )}
+          </Field>
+          <Field label={t("settings.newPassword")} hint={t("auth.passwordHint")}>
+            {(id) => (
+              <Input
+                id={id}
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                required
+                value={passwords.newPassword}
+                onChange={(e) => setPasswords((p) => ({ ...p, newPassword: e.target.value }))}
+              />
+            )}
+          </Field>
+          <div>
             <Button type="submit" loading={update.isPending}>
               {t("common.save")}
             </Button>
-          </form>
-        </Card>
+          </div>
+        </form>
+      </SettingsCard>
 
-        <Button variant="secondary" className="w-full" onClick={() => logout.mutate()} loading={logout.isPending}>
-          🚪 {t("auth.logout")}
+      <div>
+        <Button variant="outline" onClick={() => logout.mutate()} loading={logout.isPending}>
+          <LogOut /> {t("auth.logout")}
         </Button>
       </div>
-    </>
+    </div>
   );
 }

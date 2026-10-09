@@ -13,6 +13,7 @@ const schema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET doit faire au moins 32 caractères"),
+  TZ: z.string().default("Europe/Paris"),
   DEFAULT_LOCALE: z.enum(["fr", "en"]).default("fr"),
   CURRENCY: z.string().length(3).default("EUR"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL est obligatoire"),

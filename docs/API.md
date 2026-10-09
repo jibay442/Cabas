@@ -62,13 +62,13 @@ Droits : **P** = parent, **M** = membre adulte, **E** = profil enfant, **Pub** =
 | Méthode | Route | Droits | Rôle |
 |---|---|---|---|
 | GET | `/api/lists?status=active\|archived` | P M E | Listes du foyer |
-| POST | `/api/lists` | P M | Nouvelle liste |
+| POST | `/api/lists` | P M | Nouvelle liste ; sans `name`, titre automatique « Courses du jeudi 9 octobre » |
 | GET | `/api/lists/:id` | P M E | Articles triés par rayon, cochés en bas, total estimé, alertes santé |
 | PATCH | `/api/lists/:id` | P M | Renommer, magasin prévu, archiver / réactiver |
 | POST | `/api/lists/:id/finish` | P M | Fin des courses : archive la liste ; `carryOver` reporte les articles non pris sur une nouvelle liste |
 | DELETE | `/api/lists/:id` | P M | |
 | POST | `/api/lists/:id/items` | P M E | Ajouter un article (nom libre ou `productId`) ; rayon deviné, prix pré-rempli, quantité cumulée si l'article est déjà sur la liste |
-| POST | `/api/lists/:id/items/bulk` | P M | Ajout groupé : favoris, récurrents, reports d'un ticket |
+| POST | `/api/lists/:id/items/bulk` | P M E | Ajout groupé : `items` issus d'une note libre (tous), ou `productIds` — favoris, récurrents, reports (adultes) |
 | PATCH | `/api/lists/:id/items/:itemId` | P M E* | Cocher, quantité, prix, note, rayon, pour qui, magasin (*enfant : cocher, et modifier ses propres articles) |
 | DELETE | `/api/lists/:id/items/:itemId` | P M E* | (*enfant : ses propres articles) |
 | GET | `/api/events` | P M E | **SSE** du foyer : `{ topic: "list" \| "lists" \| "products", id?, by }` ; l'interface rafraîchit ce qui a changé |

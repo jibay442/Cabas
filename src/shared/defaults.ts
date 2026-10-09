@@ -42,17 +42,13 @@ export const CHAINS: Chain[] = [
   { slug: "other", name: "Autre", color: "#64748b" },
 ];
 
-export const AVATAR_EMOJIS = [
-  "😀", "😎", "🤓", "🥳", "😺", "🧒", "👧", "👦", "👶", "👨", "👩", "🧔", "👱", "👴", "👵",
-  "🧑‍🍳", "🦸", "🧙", "🐶", "🐱", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐸", "🐵", "🦄", "🐝",
-];
-
 export const MEMBER_COLORS = [
   "#16a34a", "#0ea5e9", "#6366f1", "#a855f7", "#ec4899", "#ef4444", "#f97316", "#eab308", "#14b8a6", "#64748b",
 ];
 
-/** Teintes « 700 » : texte blanc lisible dessus (contraste AA) */
-export const ACCENT_COLORS = ["#15803d", "#0f766e", "#1d4ed8", "#6d28d9", "#be185d", "#c2410c", "#a16207"];
+/** Couleurs principales proposées (assez foncées pour un texte blanc lisible, contraste AA) */
+export const DEFAULT_ACCENT = "#133c8b";
+export const ACCENT_COLORS = [DEFAULT_ACCENT, "#15803d", "#0f766e", "#6d28d9", "#be185d", "#c2410c", "#334155"];
 
 /** Allergènes majeurs (règlement UE 1169/2011), tags Open Food Facts */
 export const ALLERGENS: { tag: string; emoji: string; name: Record<Locale, string> }[] = [

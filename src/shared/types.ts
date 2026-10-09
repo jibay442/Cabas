@@ -57,6 +57,8 @@ export interface MeDto {
 
 export interface CategoryDto {
   id: string;
+  /** Clé du rayon par défaut d'origine (produce, dairy…), null pour un rayon créé par le foyer */
+  key: string | null;
   name: string;
   emoji: string;
   sortOrder: number;
@@ -119,6 +121,7 @@ export interface ListSummaryDto {
   name: string;
   status: "ACTIVE" | "ARCHIVED";
   storeId: string | null;
+  createdById: string | null;
   createdAt: string;
   archivedAt: string | null;
   itemCount: number;

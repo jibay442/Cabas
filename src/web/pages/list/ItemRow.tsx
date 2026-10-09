@@ -1,7 +1,9 @@
+import { Check, Star } from "lucide-react";
 import { lineTotalCents } from "../../../shared/text.ts";
 import type { ListItemDto, MemberDto, StoreDto } from "../../../shared/types.ts";
-import { Avatar, cx } from "../../components/ui.tsx";
+import { Avatar } from "../../components/ui/avatar.tsx";
 import { useI18n } from "../../lib/i18n.tsx";
+import { cn } from "../../lib/utils.ts";
 import { formatQuantity, useMoney } from "./format.ts";
 
 export function ItemRow({
@@ -9,6 +11,7 @@ export function ItemRow({
   members,
   stores,
   canEdit,
+  canToggle,
   onToggle,
   onOpen,
 }: {
@@ -16,6 +19,7 @@ export function ItemRow({
   members: Map<string, MemberDto>;
   stores: Map<string, StoreDto>;
   canEdit: boolean;
+  canToggle: boolean;
   onToggle: () => void;
   onOpen: () => void;
 }) {
@@ -29,54 +33,45 @@ export function ItemRow({
   const details = [item.note, store?.name].filter(Boolean).join(" · ");
 
   return (
-    <li
-      className={cx(
-        "flex items-center gap-2 rounded-2xl bg-white py-1.5 pl-1.5 pr-3 shadow-sm ring-1 ring-stone-200/70 transition dark:bg-stone-900 dark:ring-stone-800",
-        item.checked && "opacity-60",
-      )}
-    >
+    <li className={cn("hover:bg-accent/40 flex min-h-12 items-center pr-3 transition-colors sm:pr-4", item.checked && "text-muted-foreground")}>
       <button
         type="button"
         role="checkbox"
         aria-checked={item.checked}
         aria-label={t(item.checked ? "list.uncheck" : "list.check", { name: item.name })}
+        disabled={!canToggle}
         onClick={onToggle}
-        className="flex size-11 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-accent"
+        className="group flex size-11 shrink-0 items-center justify-center outline-none sm:size-12"
       >
         <span
-          className={cx(
-            "flex size-7 items-center justify-center rounded-full border-2 text-sm font-bold text-white transition",
-            item.checked ? "scale-95 border-accent bg-accent" : "border-stone-300 dark:border-stone-600",
+          className={cn(
+            "border-input flex size-5 items-center justify-center rounded-[5px] border shadow-xs transition-colors group-focus-visible:ring-[3px] group-focus-visible:ring-ring/50",
+            item.checked && "bg-primary border-primary text-primary-foreground",
           )}
         >
-          {item.checked && "✓"}
+          {item.checked && <Check className="size-3.5" strokeWidth={3} />}
         </span>
       </button>
 
-      <button type="button" onClick={onOpen} disabled={!canEdit} className="min-w-0 flex-1 py-1 text-left disabled:cursor-default">
-        <span className="flex items-baseline gap-2">
-          <span className={cx("truncate font-medium", item.checked && "line-through decoration-2")}>{item.name}</span>
-          {quantity && <span className="shrink-0 text-sm font-semibold text-accent-ink">{quantity}</span>}
-          {item.product.isFavorite && <span aria-label={t("list.favorite")} className="text-xs">⭐</span>}
+      <button type="button" onClick={onOpen} disabled={!canEdit} className="min-w-0 flex-1 py-2 text-left outline-none disabled:cursor-default">
+        <span className="flex items-center gap-2 text-sm">
+          <span className={cn("truncate font-medium", item.checked && "line-through")}>{item.name}</span>
+          {quantity && <span className="text-muted-foreground shrink-0 text-xs tabular-nums">{quantity}</span>}
+          {item.product.isFavorite && <Star className="fill-warning text-warning size-3 shrink-0" aria-label={t("list.favorite")} />}
         </span>
-        {details && <span className="block truncate text-xs text-stone-500 dark:text-stone-400">{details}</span>}
+        {details && <span className="text-muted-foreground block truncate text-xs">{details}</span>}
       </button>
 
-      <div className="flex shrink-0 flex-col items-end gap-1">
-        {total > 0 && <span className="text-sm tabular-nums text-stone-600 dark:text-stone-300">{money(total)}</span>}
-        <span className="flex items-center gap-0.5">
-          {author && <Avatar size="xs" emoji={author.emoji} color={author.color} label={t("list.addedBy", { name: author.displayName })} />}
-          {forMembers.length > 0 && (
-            <>
-              <span aria-hidden className="px-0.5 text-[10px] text-stone-400">
-                →
-              </span>
-              {forMembers.map((m) => (
-                <Avatar key={m.id} size="xs" emoji={m.emoji} color={m.color} label={t("list.forMember", { name: m.displayName })} />
-              ))}
-            </>
-          )}
-        </span>
+      <div className="flex shrink-0 items-center gap-2 pl-2">
+        {forMembers.length > 0 && (
+          <span className="flex -space-x-1" aria-label={t("list.forWhom")}>
+            {forMembers.map((m) => (
+              <Avatar key={m.id} size="xs" name={m.displayName} color={m.color} title={t("list.forMember", { name: m.displayName })} className="ring-card ring-2" />
+            ))}
+          </span>
+        )}
+        {total > 0 && <span className="text-muted-foreground text-xs tabular-nums sm:text-sm">{money(total)}</span>}
+        {author && <Avatar size="xs" name={author.displayName} color={author.color} title={t("list.addedBy", { name: author.displayName })} className="opacity-80" />}
       </div>
     </li>
   );

@@ -5,17 +5,19 @@
     "error": "Une erreur est survenue",
     "ok": "Valider",
     "save": "Enregistrer",
-    "saved": "Enregistré ✓",
+    "saved": "Enregistré",
     "add": "Ajouter",
     "copy": "Copier",
-    "copied": "Copié dans le presse-papiers ✓",
+    "copied": "Copié dans le presse-papiers",
     "share": "Partager",
     "revoke": "Révoquer",
     "delete": "Supprimer",
     "moveUp": "Monter",
     "moveDown": "Descendre",
     "notFound": "Introuvable",
-    "comingSoon": "Cette section arrive bientôt 🚧"
+    "comingSoon": "Cette section arrive dans une prochaine étape.",
+    "cancel": "Annuler",
+    "comingSoonTitle": "Bientôt disponible"
   },
   "nav": {
     "list": "Liste",
@@ -36,11 +38,13 @@
   "profile": {
     "switchTitle": "Changer de profil",
     "noChildren": "Ajoutez des profils enfants dans Réglages › Membres pour les utiliser sur cet appareil.",
-    "pin": "Code PIN"
+    "pin": "Code PIN",
+    "switchHint": "Passez sur un profil enfant sur cet appareil, ou revenez au vôtre.",
+    "current": "actuel"
   },
   "auth": {
     "login": "Se connecter",
-    "loginTitle": "Bon retour 👋",
+    "loginTitle": "Connexion",
     "logout": "Se déconnecter",
     "email": "Email",
     "password": "Mot de passe",
@@ -55,7 +59,9 @@
     "join": "Rejoindre",
     "joinTitle": "Rejoindre « {name} »",
     "joinHint": "Créez votre compte pour faire les courses en famille.",
-    "inviteInvalid": "Invitation invalide ou expirée 😕"
+    "inviteInvalid": "Invitation invalide ou expirée",
+    "loginHint": "Connectez-vous pour retrouver les courses du foyer.",
+    "inviteInvalidHint": "Demandez un nouveau lien à un parent du foyer."
   },
   "role": {
     "PARENT": "Parent",
@@ -100,7 +106,9 @@
     "allergens": "Allergies & intolérances",
     "allergensHint": "Une alerte s'affichera si un produit de la liste en contient.",
     "remove": "Retirer du foyer",
-    "removeConfirm": "Retirer {name} du foyer ? Son compte et son journal seront supprimés."
+    "removeConfirm": "Retirer {name} du foyer ? Son compte et son journal seront supprimés.",
+    "identity": "Identité",
+    "added": "{name} a été ajouté au foyer"
   },
   "household": {
     "name": "Nom du foyer",
@@ -130,27 +138,29 @@
     "categoriesDesc": "Catégories et emojis",
     "stores": "Magasins",
     "storesDesc": "Enseignes et magasins habituels",
-    "childHint": "🧒 Tu es sur un profil enfant. Touche ton avatar en haut pour changer de profil.",
+    "childHint": "Profil enfant : utilisez le menu en haut à droite pour changer de profil.",
     "openSource": "open source (MIT)",
     "language": "Langue",
     "changePassword": "Changer de mot de passe",
     "currentPassword": "Mot de passe actuel",
     "newPassword": "Nouveau mot de passe",
-    "passwordChanged": "Mot de passe modifié ✓ Les autres appareils sont déconnectés."
+    "passwordChanged": "Mot de passe modifié. Les autres appareils ont été déconnectés.",
+    "preferences": "Préférences"
   },
   "activity": {
-    "sedentary": "🪑 Sédentaire",
-    "light": "🚶 Légère (1 à 3 séances/sem.)",
-    "moderate": "🚴 Modérée (3 à 5 séances/sem.)",
-    "active": "🏃 Active (6 à 7 séances/sem.)",
-    "veryActive": "🏋️ Très active (travail physique)"
+    "sedentary": "Sédentaire",
+    "light": "Légère (1 à 3 séances/sem.)",
+    "moderate": "Modérée (3 à 5 séances/sem.)",
+    "active": "Active (6 à 7 séances/sem.)",
+    "veryActive": "Très active (travail physique)"
   },
   "categories": {
     "hint": "La liste de courses est triée dans cet ordre : rangez les rayons comme dans votre magasin.",
     "emoji": "Emoji",
     "name": "Nom du rayon",
     "newPlaceholder": "Nouveau rayon",
-    "deleteConfirm": "Supprimer le rayon « {name} » ? Les articles concernés n'auront plus de rayon."
+    "deleteConfirm": "Supprimer le rayon « {name} » ? Les articles concernés n'auront plus de rayon.",
+    "new": "Nouveau rayon"
   },
   "stores": {
     "add": "Ajouter un magasin",
@@ -168,8 +178,8 @@
     "listName": "Nom de la liste",
     "listNamePlaceholder": "Anniversaire de Léa",
     "empty": "La liste est vide",
-    "emptyHint": "Ajoutez un article avec le champ ci-dessus : chacun peut compléter la liste, elle se met à jour en direct sur tous les téléphones.",
-    "allDone": "Tout est dans le panier !",
+    "emptyHint": "Écrivez ou dictez vos courses dans la note : une ligne ou une virgule par article.",
+    "allDone": "Tout est dans le panier.",
     "inCart": "Dans le panier",
     "estimated": "Total estimé",
     "check": "Marquer « {name} » comme pris",
@@ -192,7 +202,7 @@
     "notePlaceholder": "Marque, taille, sans gluten…",
     "favorite": "Favori",
     "recurring": "Produit récurrent",
-    "recurringHint": "Proposé à chaque nouvelle liste dans ⭐",
+    "recurringHint": "Proposé dans « Favoris & récurrents »",
     "quickPicks": "Favoris & récurrents",
     "recurringTab": "Récurrents",
     "favoritesTab": "Favoris",
@@ -206,9 +216,18 @@
     "finishHint": "La liste passe dans l'historique ; elle servira à la comparer avec le ticket de caisse.",
     "carryOver": "Reporter les {count} article(s) non pris sur une nouvelle liste",
     "finish": "Terminer les courses",
-    "finished": "Courses terminées 🎉",
+    "finished": "Courses terminées",
     "delete": "Supprimer la liste",
-    "deleteConfirm": "Supprimer la liste « {name} » et tous ses articles ?"
+    "deleteConfirm": "Supprimer la liste « {name} » et tous ses articles ?",
+    "lists": "Listes",
+    "inProgress": "En cours",
+    "history": "Historique",
+    "created": "Liste créée : {name}",
+    "createdOn": "créée {date}",
+    "archivedOn": "Courses terminées le {date}",
+    "progress": "Progression des courses",
+    "edit": "Modifier la liste",
+    "reopen": "Rouvrir la liste"
   },
   "units": {
     "pcs": "pièce(s)",
@@ -221,5 +240,21 @@
     "boîte": "boîte(s)",
     "bouteille": "bouteille(s)",
     "lot": "lot(s)"
+  },
+  "note": {
+    "label": "Note de courses",
+    "placeholder": "Lait, 2 baguettes, 1 kg de pommes, pain (complet)…",
+    "hint": "Une ligne ou une virgule par article · (entre parenthèses) = note · Entrée pour ajouter",
+    "preview": "Articles détectés",
+    "dictate": "Dicter",
+    "stopDictation": "Arrêter la dictée",
+    "listening": "Je vous écoute…",
+    "micDenied": "Micro refusé : autorisez-le dans les réglages du navigateur.",
+    "micError": "La dictée n'a pas fonctionné, réessayez.",
+    "add": "Ajouter {count} article(s)",
+    "addOne": "Ajouter",
+    "addMany": "Ajouter {count} articles",
+    "added": "{count} articles ajoutés",
+    "addedOne": "{name} ajouté"
   }
 }

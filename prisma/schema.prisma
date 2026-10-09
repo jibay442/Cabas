@@ -63,7 +63,7 @@ model Household {
   id               String   @id @default(cuid())
   name             String
   currency         String   @default("EUR")
-  accentColor      String   @default("#15803d")
+  accentColor      String   @default("#133c8b")
   monthlyBudget    Int? // centimes
   /// { nutriscoreMin: "D", nova4: true, additives: true, allergens: true, alternatives: true }
   alertSettings    Json     @default("{}")

@@ -46,6 +46,6 @@ export function householdDto(h: Household): HouseholdDto {
   };
 }
 
-export const categoryDto = (c: Category): CategoryDto => ({ id: c.id, name: c.name, emoji: c.emoji, sortOrder: c.sortOrder });
+export const categoryDto = (c: Category): CategoryDto => ({ id: c.id, key: c.key, name: c.name, emoji: c.emoji, sortOrder: c.sortOrder });
 
 export const storeDto = (s: Store): StoreDto => ({ id: s.id, chain: s.chain, name: s.name, city: s.city, archived: s.archived });

@@ -1,4 +1,5 @@
 import { CHAINS, DEFAULT_CATEGORIES } from "../../shared/defaults.ts";
+import { defaultListTitle } from "../../shared/listTitle.ts";
 import { prisma, type Tx } from "../db.ts";
 import { env } from "../env.ts";
 import { hashSecret } from "../lib/crypto.ts";
@@ -18,7 +19,7 @@ export async function createHousehold(tx: Tx, name: string) {
         create: CHAINS.map((c) => ({ chain: c.slug, name: c.name })),
       },
       lists: {
-        create: { name: locale === "fr" ? "Courses de la semaine" : "Weekly shopping" },
+        create: { name: defaultListTitle(new Date(), locale, env.TZ) },
       },
     },
   });

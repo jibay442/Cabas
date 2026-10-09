@@ -8,7 +8,7 @@ let current: Theme = "SYSTEM";
 function render() {
   const dark = current === "DARK" || (current === "SYSTEM" && media().matches);
   document.documentElement.classList.toggle("dark", dark);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#0c0a09" : "#f5f5f4");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#12151b" : "#f9fafb");
 }
 
 export function applyTheme(theme: Theme) {
@@ -31,8 +31,9 @@ export function storedTheme(): Theme {
   return "SYSTEM";
 }
 
+/** Couleur principale du foyer (boutons, liens, éléments actifs) */
 export function applyAccent(color: string) {
-  document.documentElement.style.setProperty("--accent", color);
+  document.documentElement.style.setProperty("--brand", color);
 }
 
 media().addEventListener("change", render);
