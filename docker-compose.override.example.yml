@@ -1,0 +1,15 @@
+# Accès direct en local (hors Dokploy) : copiez ce fichier en
+#   docker-compose.override.yml
+# Docker Compose le fusionne automatiquement avec docker-compose.yml.
+# Ne l'utilisez pas sur Dokploy (Traefik s'occupe de l'accès).
+
+services:
+  app:
+    ports:
+      - "3000:3000"
+
+networks:
+  # Sur une machine sans Dokploy, le réseau est créé par Compose
+  dokploy-network:
+    external: false
+    name: cabas-local

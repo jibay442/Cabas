@@ -1,0 +1,393 @@
+// Cabas — schéma de base de données
+// Conventions :
+//   - montants en centimes (Int) pour éviter les erreurs d'arrondi ;
+//   - quantités et valeurs nutritionnelles en Float ;
+//   - toute donnée métier porte un householdId (isolation stricte par foyer).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/server/generated/prisma"
+  moduleFormat = "esm"
+}
+
+// L'URL de connexion est lue dans prisma.config.ts (DATABASE_URL)
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Comptes & foyer ─────────────────────────────
+
+enum Role {
+  PARENT // admin du foyer : budget, membres, paramètres
+  MEMBER // adulte / ado avec compte
+  CHILD  // profil sans email, droits limités
+}
+
+enum Theme {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+enum Sex {
+  FEMALE
+  MALE
+}
+
+/// Compte de connexion (email + mot de passe). Un profil enfant n'a pas de User.
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String // argon2id
+  theme        Theme     @default(SYSTEM)
+  locale       String    @default("fr")
+  createdAt    DateTime  @default(now())
+  member       Member?
+  sessions     Session[]
+}
+
+/// Session en base (cookie httpOnly, SameSite=Strict). id = sha256 du jeton du cookie.
+/// activeMemberId permet de « passer » sur un profil enfant depuis un appareil connecté.
+model Session {
+  id             String   @id
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeMemberId String
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Household {
+  id               String   @id @default(cuid())
+  name             String
+  currency         String   @default("EUR")
+  accentColor      String   @default("#15803d")
+  monthlyBudget    Int? // centimes
+  /// { nutriscoreMin: "D", nova4: true, additives: true, allergens: true, alternatives: true }
+  alertSettings    Json     @default("{}")
+  webhookTokenHash String?  @unique // sha256 du token propre au foyer
+  webhookTokenHint String? // 4 derniers caractères, pour l'affichage
+  createdAt        DateTime @default(now())
+
+  members     Member[]
+  invitations Invitation[]
+  categories  Category[]
+  stores      Store[]
+  products    Product[]
+  lists       ShoppingList[]
+  receipts    Receipt[]
+  aliases     LabelAlias[]
+}
+
+/// Une personne du foyer (avec ou sans compte).
+model Member {
+  id             String    @id @default(cuid())
+  householdId    String
+  household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  userId         String?   @unique
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  role           Role      @default(MEMBER)
+  displayName    String
+  emoji          String    @default("😀")
+  color          String    @default("#16a34a")
+  pinHash        String? // code PIN optionnel (profils enfants)
+  // Suivi calorique (tout est optionnel)
+  birthDate      DateTime? @db.Date
+  sex            Sex?
+  heightCm       Float?
+  weightKg       Float?
+  activityFactor Float? // 1.2 sédentaire → 1.9 très actif (Mifflin-St Jeor × facteur)
+  kcalGoal       Int? // suggéré par le calcul, modifiable
+  journalPrivate Boolean   @default(false) // adultes uniquement
+  allergens      String[] // tags Open Food Facts : "en:gluten", "en:peanuts"…
+  createdAt      DateTime  @default(now())
+
+  addedItems     ListItem[]     @relation("ItemAddedBy")
+  checkedItems   ListItem[]     @relation("ItemCheckedBy")
+  itemsFor       ListItem[]     @relation("ItemFor")
+  createdLists   ShoppingList[]
+  foodEntries    FoodEntry[]
+  invitationsMade Invitation[]
+
+  @@index([householdId])
+}
+
+model Invitation {
+  id          String    @id @default(cuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  role        Role      @default(MEMBER)
+  email       String? // facultatif : pré-remplit l'inscription
+  createdById String
+  createdBy   Member    @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+// ───────────────────────────── Référentiels ─────────────────────────────
+
+/// Rayon, éditable par foyer (créé avec les valeurs par défaut à la création du foyer).
+model Category {
+  id          String    @id @default(cuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name        String
+  emoji       String
+  sortOrder   Int       @default(0)
+  /// Tags OFF associés (ex. "en:dairies") pour classer automatiquement un produit scanné
+  offTags     String[]
+
+  products     Product[]
+  listItems    ListItem[]
+  receiptLines ReceiptLine[]
+
+  @@unique([householdId, name])
+}
+
+/// Magasin du foyer. chain = slug du parseur : auchan | leclerc | intermarche | superu | other | …
+model Store {
+  id          String    @id @default(cuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  chain       String
+  name        String // « Leclerc Rennes Cesson »
+  city        String?
+  archived    Boolean   @default(false)
+
+  lists     ShoppingList[]
+  listItems ListItem[]
+  receipts  Receipt[]
+
+  @@index([householdId])
+}
+
+/// Catalogue du foyer : tout article ajouté à une liste ou reconnu sur un ticket.
+/// Sert à l'auto-complétion, aux favoris/récurrents, au pré-remplissage du prix.
+model Product {
+  id                 String    @id @default(cuid())
+  householdId        String
+  household          Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name               String
+  normalizedName     String // minuscules, sans accents ni ponctuation
+  categoryId         String?
+  category           Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  ean                String?
+  off                OffProduct? @relation(fields: [ean], references: [ean])
+  defaultUnit        String    @default("pcs")
+  lastUnitPriceCents Int? // dernier prix connu (ticket validé ou saisie)
+  isFavorite         Boolean   @default(false)
+  isRecurring        Boolean   @default(false)
+  useCount           Int       @default(0) // classement de l'auto-complétion
+  // Surcharges nutritionnelles pour produits sans EAN (fait maison, vrac…)
+  kcal100            Float?
+  portionGrams       Float?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  listItems    ListItem[]
+  receiptLines ReceiptLine[]
+  aliases      LabelAlias[]
+  foodEntries  FoodEntry[]
+
+  @@unique([householdId, normalizedName])
+  @@index([householdId, ean])
+}
+
+/// Cache global Open Food Facts (partagé entre foyers : données publiques).
+model OffProduct {
+  ean          String   @id
+  name         String?
+  brand        String?
+  imageUrl     String?
+  nutriscore   String? // a..e
+  nova         Int? // 1..4
+  additives    String[] // "en:e250"…
+  allergens    String[]
+  categories   String[] // tags OFF, pour les alternatives
+  kcal100      Float?
+  sugars100    Float?
+  salt100      Float?
+  satFat100    Float?
+  servingGrams Float?
+  fetchedAt    DateTime @default(now())
+  notFound     Boolean  @default(false) // évite de re-interroger OFF en boucle
+
+  products Product[]
+}
+
+// ───────────────────────────── Listes ─────────────────────────────
+
+enum ListStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model ShoppingList {
+  id          String     @id @default(cuid())
+  householdId String
+  household   Household  @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name        String
+  status      ListStatus @default(ACTIVE)
+  storeId     String?
+  store       Store?     @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  createdById String?
+  createdBy   Member?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+  archivedAt  DateTime?
+
+  items    ListItem[]
+  receipts Receipt[]
+
+  @@index([householdId, status])
+}
+
+model ListItem {
+  id                String       @id @default(cuid())
+  listId            String
+  list              ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  name              String // libellé affiché (peut différer du produit)
+  quantity          Float        @default(1)
+  unit              String       @default("pcs")
+  estUnitPriceCents Int? // pré-rempli avec Product.lastUnitPriceCents
+  note              String?
+  categoryId        String?
+  category          Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  storeId           String?
+  store             Store?       @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  addedById         String?
+  addedBy           Member?      @relation("ItemAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+  /// Vide = pour tout le foyer
+  forMembers        Member[]     @relation("ItemFor")
+  checked           Boolean      @default(false)
+  checkedAt         DateTime?
+  checkedById       String?
+  checkedBy         Member?      @relation("ItemCheckedBy", fields: [checkedById], references: [id], onDelete: SetNull)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  receiptLine ReceiptLine? // rapprochement avec un ticket
+
+  @@index([listId])
+}
+
+// ───────────────────────────── Tickets ─────────────────────────────
+
+enum ReceiptSource {
+  WEBHOOK
+  UPLOAD
+  MANUAL
+}
+
+enum ReceiptStatus {
+  TO_REVIEW // lignes à vérifier / associer
+  VALIDATED // prix et alias mémorisés, compté dans le bilan
+  FAILED // fichier illisible
+}
+
+model Receipt {
+  id          String        @id @default(cuid())
+  householdId String
+  household   Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  storeId     String?
+  store       Store?        @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  chain       String // copie du slug, conservée si le magasin est supprimé
+  purchasedAt DateTime
+  totalCents  Int
+  source      ReceiptSource
+  status      ReceiptStatus @default(TO_REVIEW)
+  parser      String? // parseur utilisé : "leclerc", "generic", "lines" (JSON fourni)…
+  filePath    String? // relatif à DATA_DIR : receipts/<householdId>/<id>.pdf
+  fileMime    String?
+  rawText     String? // texte extrait (PDF/OCR/mail), utile pour re-parser
+  dedupHash   String // sha256(fichier ou lignes) + date + total
+  /// Liste comparée (par défaut : la liste active la plus récente)
+  listId      String?
+  list        ShoppingList? @relation(fields: [listId], references: [id], onDelete: SetNull)
+  createdAt   DateTime      @default(now())
+
+  lines ReceiptLine[]
+
+  @@unique([householdId, dedupHash])
+  @@index([householdId, purchasedAt])
+}
+
+model ReceiptLine {
+  id             String    @id @default(cuid())
+  receiptId      String
+  receipt        Receipt   @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  position       Int
+  rawLabel       String // tel que lu : « LAIT DEMI ECR 1L »
+  label          String // corrigé par l'utilisateur
+  quantity       Float     @default(1)
+  unitPriceCents Int?
+  totalCents     Int // négatif pour une remise
+  ean            String?
+  isDiscount     Boolean   @default(false)
+  productId      String?
+  product        Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  categoryId     String?
+  category       Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  /// Article de liste rapproché (null = acheté hors liste)
+  listItemId     String?   @unique
+  listItem       ListItem? @relation(fields: [listItemId], references: [id], onDelete: SetNull)
+  matchScore     Float? // 1 = EAN/alias exact, <1 = correspondance floue
+  matchManual    Boolean   @default(false) // l'utilisateur a forcé / refusé le rapprochement
+
+  @@index([receiptId])
+  @@index([productId])
+}
+
+/// Mémorisation « LAIT DEMI ECR 1L » → Lait demi-écrémé, réutilisée sur les tickets suivants.
+model LabelAlias {
+  id             String    @id @default(cuid())
+  householdId    String
+  household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  chain          String // "" = valable pour toutes les enseignes
+  normalizedLabel String
+  productId      String
+  product        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+
+  @@unique([householdId, chain, normalizedLabel])
+}
+
+// ───────────────────────────── Suivi calorique ─────────────────────────────
+
+enum Meal {
+  BREAKFAST // petit-déj
+  LUNCH // déjeuner
+  AFTERNOON // goûter
+  DINNER // dîner
+  SNACK // en-cas
+}
+
+enum FoodUnit {
+  G
+  ML
+  PORTION
+}
+
+model FoodEntry {
+  id          String   @id @default(cuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  day         DateTime @db.Date
+  meal        Meal
+  label       String // « Pizza maison », « Yaourt nature »
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  ean         String? // ajout par scan / recherche OFF sans produit du foyer
+  quantity    Float?
+  unit        FoodUnit?
+  kcal        Int // figé à la saisie : l'historique ne bouge pas si le produit change
+  createdById String? // un parent peut saisir pour un enfant
+  createdAt   DateTime @default(now())
+
+  @@index([memberId, day])
+}

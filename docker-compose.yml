@@ -1,0 +1,61 @@
+# Cabas — déploiement Docker Compose (compatible Dokploy / Traefik)
+#
+#   Base embarquée :   docker compose --profile db up -d
+#   Base externe :     docker compose up -d   (DATABASE_URL dans .env)
+#
+# Aucun port n'est publié : Traefik (géré par Dokploy) joint le conteneur
+# sur le réseau « dokploy-network », port interne 3000.
+# Pour un accès direct en local, voir docker-compose.override.example.yml.
+
+services:
+  app:
+    build: .
+    image: cabas:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /app/data
+    expose:
+      - "3000"
+    volumes:
+      - cabas-data:/app/data
+    networks:
+      - default
+      - dokploy-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["db"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cabas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cabas}
+      POSTGRES_DB: ${POSTGRES_DB:-cabas}
+      TZ: ${TZ:-Europe/Paris}
+    volumes:
+      - cabas-db:/var/lib/postgresql/data
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  cabas-data:
+  cabas-db:
+
+networks:
+  dokploy-network:
+    external: true
