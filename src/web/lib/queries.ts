@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Chain } from "../../shared/defaults.ts";
-import type { AppConfig, CategoryDto, MeDto, MemberDto, StoreDto } from "../../shared/types.ts";
+import type { AppConfig, CategoryDto, ListDetailDto, ListSummaryDto, MeDto, MemberDto, ProductDto, StoreDto } from "../../shared/types.ts";
 import { api, ApiError } from "./api.ts";
 
 export const useConfig = () => useQuery({ queryKey: ["config"], queryFn: () => api.get<AppConfig>("/config"), staleTime: Infinity });
@@ -32,3 +32,21 @@ export const useMembers = () => useQuery({ queryKey: ["members"], queryFn: () =>
 export const useCategories = () => useQuery({ queryKey: ["categories"], queryFn: () => api.get<CategoryDto[]>("/categories") });
 export const useStores = () => useQuery({ queryKey: ["stores"], queryFn: () => api.get<StoreDto[]>("/stores") });
 export const useChains = () => useQuery({ queryKey: ["chains"], queryFn: () => api.get<Chain[]>("/chains"), staleTime: Infinity });
+
+export const useLists = (status: "active" | "archived" = "active") =>
+  useQuery({ queryKey: ["lists", status], queryFn: () => api.get<ListSummaryDto[]>(`/lists?status=${status}`) });
+
+export const useList = (id: string | undefined) =>
+  useQuery({ queryKey: ["list", id], queryFn: () => api.get<ListDetailDto>(`/lists/${id}`), enabled: !!id });
+
+export const useProducts = (filter: "favorite" | "recurring") =>
+  useQuery({ queryKey: ["products", filter], queryFn: () => api.get<ProductDto[]>(`/products?${filter}=true`) });
+
+export const useProductSuggest = (q: string) =>
+  useQuery({
+    queryKey: ["products", "suggest", q],
+    queryFn: () => api.get<ProductDto[]>(`/products/suggest?q=${encodeURIComponent(q)}`),
+    enabled: q.trim().length > 0,
+    staleTime: 10_000,
+    placeholderData: (previous) => previous,
+  });

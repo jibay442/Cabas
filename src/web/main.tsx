@@ -9,6 +9,7 @@ import { useConfig, useMe } from "./lib/queries.ts";
 import { applyAccent, applyTheme } from "./lib/theme.ts";
 import { LoginPage, SignupPage } from "./pages/AuthPages.tsx";
 import { ComingSoon } from "./pages/ComingSoon.tsx";
+import { ListPage } from "./pages/list/ListPage.tsx";
 import { AccountSettings } from "./pages/settings/AccountSettings.tsx";
 import { CategoriesSettings, StoresSettings } from "./pages/settings/CatalogSettings.tsx";
 import { HouseholdSettings } from "./pages/settings/HouseholdSettings.tsx";
@@ -26,7 +27,7 @@ function AuthedRoutes() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<ComingSoon emoji="🛒" title={t("nav.list")} />} />
+        <Route index element={<ListPage />} />
         <Route path="tickets" element={<ComingSoon emoji="🧾" title={t("nav.receipts")} />} />
         <Route path="repas" element={<ComingSoon emoji="🍽️" title={t("nav.meals")} />} />
         <Route path="bilan" element={<ComingSoon emoji="📊" title={t("nav.stats")} />} />

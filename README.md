@@ -26,7 +26,7 @@ Au premier démarrage, le compte `ADMIN_EMAIL` / `ADMIN_PASSWORD` est créé ave
 ```bash
 npm install
 cp .env.example .env     # DATABASE_URL vers un PostgreSQL local, NODE_ENV=development, APP_URL=http://localhost:5173
-npx prisma migrate dev   # crée les tables
+npm run db:migrate       # crée les tables et génère le client Prisma
 npm run dev              # API sur :3000, interface sur http://localhost:5173
 ```
 

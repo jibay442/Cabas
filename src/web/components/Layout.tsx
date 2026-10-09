@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router";
+import { useHouseholdEvents } from "../lib/events.ts";
 import { useT } from "../lib/i18n.tsx";
 import { useConfig, useSession } from "../lib/queries.ts";
 import { ProfileSwitcher } from "./ProfileSwitcher.tsx";
@@ -11,6 +12,7 @@ export function Layout() {
   const { data: config } = useConfig();
   const { member, household, isChild } = useSession();
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  useHouseholdEvents();
 
   // Un profil enfant n'a accès qu'à la liste, à ses repas et au changement de profil
   const tabs = [
@@ -63,36 +65,40 @@ export function Layout() {
         <Outlet />
       </main>
 
-      <nav
-        aria-label={t("nav.main")}
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden dark:border-stone-800 dark:bg-stone-900/95"
-      >
-        <ul className="mx-auto flex max-w-3xl">
-          {tabs.map((tab) => (
-            <li key={tab.to} className="flex-1">
-              <NavLink
-                to={tab.to}
-                end={tab.end}
-                className={({ isActive }) =>
-                  cx(
-                    "flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition",
-                    isActive ? "text-accent-ink" : "text-stone-500 dark:text-stone-400",
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <span aria-hidden className={cx("text-2xl transition", isActive && "scale-110")}>
-                      {tab.emoji}
-                    </span>
-                    {tab.label}
-                  </>
-                )}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <div className="fixed inset-x-0 bottom-0 z-20 md:pb-[env(safe-area-inset-bottom)]">
+        {/* Emplacement où une page peut afficher une barre au-dessus de la navigation (ex. total de la liste) */}
+        <div id="bottom-slot" className="mx-auto max-w-3xl" />
+        <nav
+          aria-label={t("nav.main")}
+          className="border-t border-stone-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden dark:border-stone-800 dark:bg-stone-900/95"
+        >
+          <ul className="mx-auto flex max-w-3xl">
+            {tabs.map((tab) => (
+              <li key={tab.to} className="flex-1">
+                <NavLink
+                  to={tab.to}
+                  end={tab.end}
+                  className={({ isActive }) =>
+                    cx(
+                      "flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition",
+                      isActive ? "text-accent-ink" : "text-stone-500 dark:text-stone-400",
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span aria-hidden className={cx("text-2xl transition", isActive && "scale-110")}>
+                        {tab.emoji}
+                      </span>
+                      {tab.label}
+                    </>
+                  )}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
 
       <ProfileSwitcher open={switcherOpen} onClose={() => setSwitcherOpen(false)} />
     </div>

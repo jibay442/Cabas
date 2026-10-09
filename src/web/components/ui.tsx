@@ -123,14 +123,16 @@ export function Card({ className, children }: { className?: string; children: Re
   return <div className={cx("rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200/70 dark:bg-stone-900 dark:ring-stone-800", className)}>{children}</div>;
 }
 
-export function Avatar({ emoji, color, size = "md", label }: { emoji: string; color: string; size?: "sm" | "md" | "lg"; label?: string }) {
+export function Avatar({ emoji, color, size = "md", label }: { emoji: string; color: string; size?: "xs" | "sm" | "md" | "lg"; label?: string }) {
   return (
     <span
       role={label ? "img" : undefined}
       aria-label={label}
+      title={label}
       aria-hidden={label ? undefined : true}
       className={cx(
         "inline-flex shrink-0 items-center justify-center rounded-full",
+        size === "xs" && "size-5 text-[11px]",
         size === "sm" && "size-7 text-base",
         size === "md" && "size-10 text-xl",
         size === "lg" && "size-16 text-4xl",

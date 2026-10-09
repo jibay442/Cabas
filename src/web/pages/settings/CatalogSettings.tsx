@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import type { CategoryDto, StoreDto } from "../../../shared/types.ts";
+import { ChainLogo } from "../../components/ChainLogo.tsx";
 import { Button, Card, Input, PageHeader, Select, useToast } from "../../components/ui.tsx";
 import { api, ApiError } from "../../lib/api.ts";
 import { useT } from "../../lib/i18n.tsx";
@@ -116,31 +117,28 @@ export function StoresSettings() {
     <>
       <PageHeader title={t("settings.stores")} back="/reglages" />
       <ul className="space-y-2">
-        {stores.map((s) => {
-          const chain = chains.find((c) => c.slug === s.chain);
-          return (
-            <li
-              key={s.id}
-              className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-stone-200/70 data-[archived=true]:opacity-60 dark:bg-stone-900 dark:ring-stone-800"
-              data-archived={s.archived}
-            >
-              <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: chain?.color ?? "#64748b" }} aria-hidden />
-              <span className="flex-1">
-                <span className="block font-medium">{s.name}</span>
-                <span className="block text-sm text-stone-500 dark:text-stone-400">
-                  {chainName(s.chain)}
-                  {s.city && ` · ${s.city}`}
-                </span>
+        {stores.map((s) => (
+          <li
+            key={s.id}
+            className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-stone-200/70 data-[archived=true]:opacity-60 dark:bg-stone-900 dark:ring-stone-800"
+            data-archived={s.archived}
+          >
+            <ChainLogo chain={s.chain} />
+            <span className="flex-1">
+              <span className="block font-medium">{s.name}</span>
+              <span className="block text-sm text-stone-500 dark:text-stone-400">
+                {chainName(s.chain)}
+                {s.city && ` · ${s.city}`}
               </span>
-              <Button size="sm" variant="ghost" onClick={() => update.mutate({ id: s.id, archived: !s.archived })}>
-                {s.archived ? t("stores.unarchive") : t("stores.archive")}
-              </Button>
-              <Button size="sm" variant="ghost" aria-label={t("common.delete")} onClick={() => confirm(t("stores.deleteConfirm", { name: s.name })) && remove.mutate(s.id)}>
-                🗑️
-              </Button>
-            </li>
-          );
-        })}
+            </span>
+            <Button size="sm" variant="ghost" onClick={() => update.mutate({ id: s.id, archived: !s.archived })}>
+              {s.archived ? t("stores.unarchive") : t("stores.archive")}
+            </Button>
+            <Button size="sm" variant="ghost" aria-label={t("common.delete")} onClick={() => confirm(t("stores.deleteConfirm", { name: s.name })) && remove.mutate(s.id)}>
+              🗑️
+            </Button>
+          </li>
+        ))}
       </ul>
       <Card className="mt-4">
         <form

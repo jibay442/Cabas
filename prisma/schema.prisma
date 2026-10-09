@@ -138,6 +138,8 @@ model Category {
   name        String
   emoji       String
   sortOrder   Int       @default(0)
+  /// Clé d'un rayon par défaut (produce, dairy…) : sert au classement automatique des articles
+  key         String?
   /// Tags OFF associés (ex. "en:dairies") pour classer automatiquement un produit scanné
   offTags     String[]
 

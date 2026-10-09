@@ -81,3 +81,59 @@ export interface InvitationDto {
 export interface ApiErrorBody {
   error: { code: string; message: string; details?: unknown };
 }
+
+export interface ProductDto {
+  id: string;
+  name: string;
+  categoryId: string | null;
+  defaultUnit: string;
+  lastUnitPriceCents: number | null;
+  isFavorite: boolean;
+  isRecurring: boolean;
+  useCount: number;
+}
+
+export interface ListItemDto {
+  id: string;
+  listId: string;
+  productId: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  estUnitPriceCents: number | null;
+  note: string | null;
+  categoryId: string | null;
+  storeId: string | null;
+  addedById: string | null;
+  /** Vide = pour tout le foyer */
+  forMemberIds: string[];
+  checked: boolean;
+  checkedById: string | null;
+  checkedAt: string | null;
+  createdAt: string;
+  product: { isFavorite: boolean; isRecurring: boolean };
+}
+
+export interface ListSummaryDto {
+  id: string;
+  name: string;
+  status: "ACTIVE" | "ARCHIVED";
+  storeId: string | null;
+  createdAt: string;
+  archivedAt: string | null;
+  itemCount: number;
+  checkedCount: number;
+  estimatedCents: number;
+}
+
+export interface ListDetailDto extends ListSummaryDto {
+  items: ListItemDto[];
+}
+
+/** Évènement temps réel diffusé aux membres du foyer (SSE /api/events) */
+export interface HouseholdEvent {
+  topic: "list" | "lists" | "products";
+  id?: string;
+  /** Membre à l'origine du changement */
+  by: string;
+}

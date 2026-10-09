@@ -48,11 +48,11 @@ Droits : **P** = parent, **M** = membre adulte, **E** = profil enfant, **Pub** =
 ## Produits & Open Food Facts
 | Méthode | Route | Droits | Rôle |
 |---|---|---|---|
-| GET | `/api/products/suggest?q=` | P M E | Auto-complétion : historique du foyer d'abord, puis OFF |
+| GET | `/api/products/suggest?q=` | P M E | Auto-complétion depuis l'historique du foyer (Open Food Facts à l'étape 5) |
 | GET | `/api/products?favorite=&recurring=&q=` | P M E | Catalogue du foyer |
 | POST | `/api/products` | P M | Créer un produit manuellement |
 | GET | `/api/products/:id` | P M E | Détail : données OFF, alertes, dernier prix |
-| PATCH | `/api/products/:id` | P M | Favori, récurrent, catégorie, EAN, kcal/portion |
+| PATCH | `/api/products/:id` | P M | Favori, récurrent, rayon, unité, dernier prix |
 | GET | `/api/products/:id/prices` | P M | Évolution du prix dans le temps et par enseigne |
 | GET | `/api/products/:id/alternatives` | P M E | Produits OFF mieux notés de la même catégorie |
 | GET | `/api/off/barcode/:ean` | P M E | Lookup EAN (cache en base, sinon OFF) |
@@ -65,13 +65,13 @@ Droits : **P** = parent, **M** = membre adulte, **E** = profil enfant, **Pub** =
 | POST | `/api/lists` | P M | Nouvelle liste |
 | GET | `/api/lists/:id` | P M E | Articles triés par rayon, cochés en bas, total estimé, alertes santé |
 | PATCH | `/api/lists/:id` | P M | Renommer, magasin prévu, archiver / réactiver |
-| DELETE | `/api/lists/:id` | P | |
-| POST | `/api/lists/:id/items` | P M E | Ajouter un article (nom libre, `productId` ou `ean`) ; le prix est pré-rempli |
+| POST | `/api/lists/:id/finish` | P M | Fin des courses : archive la liste ; `carryOver` reporte les articles non pris sur une nouvelle liste |
+| DELETE | `/api/lists/:id` | P M | |
+| POST | `/api/lists/:id/items` | P M E | Ajouter un article (nom libre ou `productId`) ; rayon deviné, prix pré-rempli, quantité cumulée si l'article est déjà sur la liste |
 | POST | `/api/lists/:id/items/bulk` | P M | Ajout groupé : favoris, récurrents, reports d'un ticket |
 | PATCH | `/api/lists/:id/items/:itemId` | P M E* | Cocher, quantité, prix, note, rayon, pour qui, magasin (*enfant : cocher, et modifier ses propres articles) |
 | DELETE | `/api/lists/:id/items/:itemId` | P M E* | (*enfant : ses propres articles) |
-| POST | `/api/lists/:id/clear-checked` | P M | Retirer les articles cochés |
-| GET | `/api/events` | P M E | **SSE** du foyer : `item.added`, `item.updated`, `item.removed`, `list.updated`, `receipt.ready` |
+| GET | `/api/events` | P M E | **SSE** du foyer : `{ topic: "list" \| "lists" \| "products", id?, by }` ; l'interface rafraîchit ce qui a changé |
 
 ## Tickets de caisse
 | Méthode | Route | Droits | Rôle |

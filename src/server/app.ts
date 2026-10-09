@@ -11,8 +11,11 @@ import { HttpError } from "./lib/errors.ts";
 import { registerAuth } from "./plugins/auth.ts";
 import authRoutes from "./routes/auth.ts";
 import catalogRoutes from "./routes/catalog.ts";
+import eventRoutes from "./routes/events.ts";
 import householdRoutes from "./routes/household.ts";
+import listRoutes from "./routes/lists.ts";
 import memberRoutes from "./routes/members.ts";
+import productRoutes from "./routes/products.ts";
 import systemRoutes, { manifest } from "./routes/system.ts";
 
 /** Dossier du front compilé : dist/web (à côté de dist/server) */
@@ -36,11 +39,21 @@ export async function buildApp() {
   registerAuth(app);
 
   // Protection CSRF en complément des cookies SameSite=Strict : une requête qui modifie
-  // des données doit venir de la même origine (le webhook, authentifié par token, est exclu).
+  // des données doit venir de l'app elle-même (le webhook, authentifié par token, est exclu).
+  // Hôtes admis : celui de APP_URL, et celui de la requête (direct ou via proxy : Traefik, Vite en dev).
+  const appHost = new URL(env.APP_URL).host;
   app.addHook("onRequest", async (request, reply) => {
     if (["GET", "HEAD", "OPTIONS"].includes(request.method) || request.url.startsWith("/api/webhooks/")) return;
     const origin = request.headers.origin;
-    if (origin && new URL(origin).host !== request.headers.host) {
+    if (!origin) return;
+    const allowed = [appHost, request.headers.host, request.headers["x-forwarded-host"]];
+    let originHost: string | null = null;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      // Origin illisible (ex. « null ») : refusée
+    }
+    if (!originHost || !allowed.includes(originHost)) {
       return reply.code(403).send({ error: { code: "bad_origin", message: "Origine non autorisée" } });
     }
   });
@@ -69,6 +82,9 @@ export async function buildApp() {
       await api.register(householdRoutes);
       await api.register(memberRoutes);
       await api.register(catalogRoutes);
+      await api.register(productRoutes);
+      await api.register(listRoutes);
+      await api.register(eventRoutes);
     },
     { prefix: "/api" },
   );

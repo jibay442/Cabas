@@ -12,10 +12,13 @@ export async function createHousehold(tx: Tx, name: string) {
       name,
       currency: env.CURRENCY,
       categories: {
-        create: DEFAULT_CATEGORIES.map((c, i) => ({ name: c.name[locale], emoji: c.emoji, offTags: c.offTags, sortOrder: i })),
+        create: DEFAULT_CATEGORIES.map((c, i) => ({ key: c.key, name: c.name[locale], emoji: c.emoji, offTags: c.offTags, sortOrder: i })),
       },
       stores: {
         create: CHAINS.map((c) => ({ chain: c.slug, name: c.name })),
+      },
+      lists: {
+        create: { name: locale === "fr" ? "Courses de la semaine" : "Weekly shopping" },
       },
     },
   });

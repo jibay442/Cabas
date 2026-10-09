@@ -37,3 +37,14 @@ export function money(cents: number | null | undefined, currency = "EUR", locale
   if (cents == null) return "–";
   return new Intl.NumberFormat(locale, { style: "currency", currency }).format(cents / 100);
 }
+
+/** « 1,05 » / « 1.05 € » → 105 ; vide → null */
+export function parseMoney(input: string): number | null {
+  const cleaned = input.replace(/[^\d,.-]/g, "").replace(",", ".");
+  if (!cleaned) return null;
+  const value = Number(cleaned);
+  return Number.isFinite(value) && value >= 0 ? Math.round(value * 100) : null;
+}
+
+/** 105 → « 1,05 » (pour pré-remplir un champ) */
+export const centsToInput = (cents: number | null | undefined) => (cents == null ? "" : (cents / 100).toFixed(2).replace(".", ","));
